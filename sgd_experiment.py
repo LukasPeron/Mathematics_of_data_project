@@ -90,7 +90,7 @@ def plot_training_history(histories):
     plt.xlabel('Epochs')
     plt.ylabel('Accuracy')
     plt.tight_layout()
-    plt.savefig("/pbs/home/l/lperon/work_JUNO/hors_sujet/learning_vs_batch_size_and_learning_rate.png")
+    plt.savefig("/pbs/home/l/lperon/work_JUNO/hors_sujet/sgd.png")
 
 def train_and_evaluate(batch_size, learning_rate, epochs, train_loader, val_loader, test_loader, device):
     model = create_cnn_model().to(device)
@@ -185,34 +185,25 @@ def main(epochs=20):
     test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False, pin_memory=True)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+    ratio_lr_bs = 1e-4
+
     # Original configs
-    configurations = [
-        {'batch_size': 16, 'learning_rate': 0.0016},
-        {'batch_size': 32, 'learning_rate': 0.0032},
-        {'batch_size': 64, 'learning_rate': 0.0064},
-        {'batch_size': 128, 'learning_rate': 0.0128},
-        {'batch_size': 200, 'learning_rate': 0.02},
-        {'batch_size': 256, 'learning_rate': 0.0256},
-        {'batch_size': 400, 'learning_rate': 0.04},
-        {'batch_size': 512, 'learning_rate': 0.0512},
-        {'batch_size': 720, 'learning_rate': 0.072},
-        {'batch_size': 1024, 'learning_rate': 0.1024}
-    ]
+    bs_list = [16, 32, 64, 128, 200, 256, 400, 512, 720, 1024]
 
     configs_extended = []
-    for c in configurations:
+    for bs in bs_list:
         configs_extended.append({
-            'batch_size': c['batch_size'],
-            'learning_rate': c['learning_rate'],
+            'batch_size': bs,
+            'learning_rate': bs * ratio_lr_bs,
             'ratio_multiplier': 1.0
         })
         configs_extended.append({
-            'batch_size': c['batch_size'],
-            'learning_rate': c['learning_rate'] * 5.0,
+            'batch_size': bs,
+            'learning_rate': bs * ratio_lr_bs * 5.0,
             'ratio_multiplier': 5.0
         })
 
-    b_sizes = [c['batch_size'] for c in configurations]
+    b_sizes = [bs for bs in bs_list]
     min_bs, max_bs = min(b_sizes), max(b_sizes)
     histories = []
 
